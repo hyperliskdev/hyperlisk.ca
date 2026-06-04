@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import LiveDashboard from "../../components/LiveDashboard.astro";
+import { dashboards } from "../../lib/dashboards";
+---
+<BaseLayout
+  title="dashboards"
+  description="Live dashboards fed by self-hosted Rust backends."
+  wide
+>
+  <header class="list-head">
+    <span class="badge badge--dash">live</span>
+    <h1>Dashboards</h1>
+    <p>
+      Live data from my own collectors. Each panel polls a self-hosted Rust
+      backend — if a panel says <em>offline</em>, the backend just isn't
+      running.
+    </p>
+  </header>
+
+  <div class="dash-grid">
+    {dashboards.map((d) => (
+      <div id={d.slug}>
+        <LiveDashboard dashboard={d} />
+      </div>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .list-head {
+    margin-bottom: 2rem;
+  }
+  .list-head h1 {
+    margin: 0.6rem 0 0.25rem;
+  }
+  .list-head p {
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 42rem;
+  }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--gap);
+  }
+  .dash-grid > div {
+    scroll-margin-top: 4.5rem;
+  }
+</style>

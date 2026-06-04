@@ -1,0 +1,17 @@
+---
+import { categoryLabel, categoryColor } from "../lib/categories";
+
+interface Props {
+  slug: string;
+  href?: string;
+}
+
+const { slug, href } = Astro.props;
+const label = categoryLabel(slug);
+const color = categoryColor(slug);
+---
+{href ? (
+  <a class="badge badge--cat" style={`--badge-color:${color}`} href={href}>{label}</a>
+) : (
+  <span class="badge badge--cat" style={`--badge-color:${color}`}>{label}</span>
+)}

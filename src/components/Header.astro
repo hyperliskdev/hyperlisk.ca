@@ -1,0 +1,116 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+import { getCollection } from "astro:content";
+
+// Category slugs are free-form, so derive the active set from real posts.
+const usedSlugs = [
+  ...new Set(
+    (await getCollection("posts"))
+      .filter((p) => !p.data.draft)
+      .flatMap((p) => p.data.categories),
+  ),
+];
+
+const path = Astro.url.pathname;
+// `posts` is active on /posts and on any single-category page (e.g. /physics)
+const isActive = (href: string) => {
+  if (href === "/") return path === "/";
+  if (href === "/posts") {
+    return (
+      path.startsWith("/posts") ||
+      usedSlugs.some((s) => path === `/${s}` || path.startsWith(`/${s}/`))
+    );
+  }
+  return path.startsWith(href);
+};
+
+const nav = [
+  { href: "/posts", label: "posts" },
+  { href: "/dashboards", label: "dashboards" },
+  { href: "/about", label: "about" },
+];
+---
+<div class="accent-rule"></div>
+<header class="site-header">
+  <div class="container container--wide site-header__inner">
+    <a href="/" class="brand" aria-label="hyperlisk home">
+      <span class="brand__bracket">[</span><span class="brand__name">hyperlisk</span><span class="brand__bracket">]</span>
+    </a>
+
+    <nav class="site-nav mono" aria-label="Primary">
+      {nav.map((item) => (
+        <a
+          href={item.href}
+          class:list={["site-nav__link", { "is-active": isActive(item.href) }]}
+          aria-current={isActive(item.href) ? "page" : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
+    <ThemeToggle />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    background: var(--surface);
+    border-bottom: var(--border-w) solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    backdrop-filter: saturate(1.1);
+  }
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    height: 3.5rem;
+  }
+  .brand {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .brand:hover {
+    text-decoration: none;
+  }
+  .brand__bracket {
+    color: var(--accent);
+  }
+  .site-nav {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .site-nav__link {
+    color: var(--text-muted);
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+  }
+  .site-nav__link:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .site-nav__link.is-active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  @media (max-width: 38rem) {
+    .site-header__inner {
+      height: auto;
+      flex-wrap: wrap;
+      padding-block: 0.6rem;
+      gap: 0.75rem;
+    }
+    .site-nav {
+      width: 100%;
+      order: 3;
+      margin-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,70 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import CategoryBadge from "../../components/CategoryBadge.astro";
+import { categoryTitle, categoryBlurb, categoryLabel } from "../../lib/categories";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  const slugs = [
+    ...new Set(posts.filter((p) => !p.data.draft).flatMap((p) => p.data.categories)),
+  ];
+  return slugs.map((slug) => ({ params: { category: slug } }));
+}
+
+const { category } = Astro.params;
+const slug = category!;
+const title = categoryTitle(slug);
+const blurb = categoryBlurb(slug);
+
+const posts = (await getCollection("posts"))
+  .filter((p) => p.data.categories.includes(slug) && !p.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+<BaseLayout title={categoryLabel(slug)} description={blurb} wide>
+  <header class="list-head">
+    <CategoryBadge slug={slug} />
+    <h1>{title}</h1>
+    {blurb && <p>{blurb}</p>}
+  </header>
+
+  {posts.length === 0 ? (
+    <p class="empty mono">No posts yet.</p>
+  ) : (
+    <div class="card-grid">
+      {posts.map((p) => (
+        <PostCard
+          href={`/posts/${p.slug}`}
+          title={p.data.title}
+          description={p.data.description}
+          pubDate={p.data.pubDate}
+          tags={p.data.tags}
+          categories={p.data.categories}
+          severity={p.data.severity}
+        />
+      ))}
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .list-head {
+    margin-bottom: 2rem;
+  }
+  .list-head h1 {
+    margin: 0.6rem 0 0.25rem;
+  }
+  .list-head p {
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: var(--gap);
+  }
+  .empty {
+    color: var(--text-muted);
+  }
+</style>

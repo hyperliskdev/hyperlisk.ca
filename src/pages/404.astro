@@ -1,0 +1,26 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="404" description="Page not found.">
+  <div class="notfound">
+    <p class="mono notfound__code">404</p>
+    <h1>segfault — page not found</h1>
+    <p>That address doesn't map to anything.</p>
+    <a class="btn" href="/">← back home</a>
+  </div>
+</BaseLayout>
+
+<style>
+  .notfound {
+    text-align: center;
+    padding: 4rem 0;
+  }
+  .notfound__code {
+    font-size: 4rem;
+    color: var(--accent);
+    margin: 0;
+  }
+  .notfound h1 {
+    margin-top: 0.5rem;
+  }
+</style>

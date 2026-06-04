@@ -1,0 +1,84 @@
+---
+import { formatDate, isoDate } from "../lib/format";
+import CategoryBadge from "./CategoryBadge.astro";
+
+interface Props {
+  href: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags?: string[];
+  categories: string[];
+  severity?: string;
+}
+
+const { href, title, description, pubDate, tags = [], categories, severity } =
+  Astro.props;
+---
+<article class="card post-card">
+  <div class="post-card__meta mono">
+    {categories.map((c) => <CategoryBadge slug={c} />)}
+    {severity && (
+      <span class:list={["badge", `badge--sev-${severity}`]}>{severity}</span>
+    )}
+    <time datetime={isoDate(pubDate)}>{formatDate(pubDate)}</time>
+  </div>
+
+  <h3 class="post-card__title">
+    <a href={href}>{title}</a>
+  </h3>
+  <p class="post-card__desc">{description}</p>
+
+  {tags.length > 0 && (
+    <ul class="post-card__tags mono">
+      {tags.map((t) => <li>#{t}</li>)}
+    </ul>
+  )}
+</article>
+
+<style>
+  .card {
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .post-card {
+    padding: 1.1rem 1.25rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .post-card:hover {
+    border-color: var(--border-strong);
+  }
+  .post-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .post-card__title {
+    margin: 0.6rem 0 0.35rem;
+    font-size: 1.2rem;
+  }
+  .post-card__title a {
+    color: var(--text);
+  }
+  .post-card__title a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .post-card__desc {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .post-card__tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.8rem 0 0;
+    padding: 0;
+    color: var(--text-muted);
+  }
+</style>

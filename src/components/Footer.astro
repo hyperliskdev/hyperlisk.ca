@@ -1,0 +1,32 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="container container--wide site-footer__inner mono">
+    <span>© {year} hyperlisk.ca</span>
+    <span class="site-footer__links">
+      <a href="/rss.xml">rss</a>
+      <a href="https://github.com" rel="me noopener" target="_blank">github</a>
+    </span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: var(--border-w) solid var(--border);
+    background: var(--surface);
+    padding-block: 1.25rem;
+    color: var(--text-muted);
+  }
+  .site-footer__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .site-footer__links {
+    display: flex;
+    gap: 1rem;
+  }
+</style>

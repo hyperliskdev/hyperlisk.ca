@@ -1,0 +1,505 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CategoryBadge from "../../components/CategoryBadge.astro";
+import { categoryLabel, categoryColor } from "../../lib/categories";
+
+const allPosts = (await getCollection("posts"))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// every category used across all posts, ordered by post count
+const counts = new Map<string, number>();
+for (const p of allPosts)
+  for (const c of p.data.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
+const usedSlugs = [...counts.keys()].sort(
+  (a, b) => counts.get(b)! - counts.get(a)!,
+);
+
+// ---- graph data (consumed by the client force simulation) ----
+type GNode = {
+  id: string;
+  label: string;
+  type: "root" | "category" | "post";
+  href?: string;
+  color?: string;
+  r: number;
+};
+type GLink = { source: string; target: string };
+
+const nodes: GNode[] = [
+  { id: "root", label: "hyperlisk", type: "root", r: 16 },
+];
+const links: GLink[] = [];
+
+for (const slug of usedSlugs) {
+  nodes.push({
+    id: `cat:${slug}`,
+    label: categoryLabel(slug),
+    type: "category",
+    href: `/${slug}`,
+    color: categoryColor(slug),
+    r: 9 + Math.min(counts.get(slug)!, 6),
+  });
+  links.push({ source: "root", target: `cat:${slug}` });
+}
+
+for (const p of allPosts) {
+  const id = `post:${p.slug}`;
+  // colour a post by its first category
+  nodes.push({
+    id,
+    label: p.data.title,
+    type: "post",
+    href: `/posts/${p.slug}`,
+    color: categoryColor(p.data.categories[0]),
+    r: 6,
+  });
+  // map the post under every category it declares
+  for (const slug of p.data.categories) {
+    links.push({ source: `cat:${slug}`, target: id });
+  }
+}
+
+const graph = { nodes, links };
+
+// posts grouped by category for the accessible list / no-JS fallback
+const grouped = usedSlugs.map((slug) => ({
+  slug,
+  posts: allPosts.filter((p) => p.data.categories.includes(slug)),
+}));
+---
+<BaseLayout
+  title="posts"
+  description="Every post on the site, mapped by category."
+  wide
+>
+  <header class="posts-head">
+    <h1>Posts</h1>
+    <p>
+      Everything I've written, mapped by category. Drag a node to nudge it,
+      hover to trace its links, click to open. Prefer a list? It's right below.
+    </p>
+  </header>
+
+  <figure class="graph" aria-hidden="true">
+    <svg class="graph__svg" viewBox="0 0 800 560" role="presentation"></svg>
+    <figcaption class="graph__hint mono">
+      <span class="graph__hint-active" data-graph-hint>force graph · {nodes.length} nodes</span>
+    </figcaption>
+  </figure>
+  <script type="application/json" data-graph set:html={JSON.stringify(graph)} />
+
+  <section class="post-list">
+    <h2 class="post-list__title">All posts</h2>
+    {grouped.map(({ slug, posts }) => (
+      <div class="post-list__group">
+        <CategoryBadge slug={slug} href={`/${slug}`} />
+        <ul>
+          {posts.map((p) => (
+            <li>
+              <a href={`/posts/${p.slug}`}>{p.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
+</BaseLayout>
+
+<style>
+  .posts-head {
+    margin-bottom: 1.5rem;
+  }
+  .posts-head h1 {
+    margin: 0 0 0.4rem;
+  }
+  .posts-head p {
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 44rem;
+  }
+
+  .graph {
+    margin: 0 0 3rem;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .graph__svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: grab;
+  }
+  .graph__svg:active {
+    cursor: grabbing;
+  }
+  .graph__hint {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.5rem 0.85rem;
+    border-top: var(--border-w) solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  /* graph elements (created by the client script) */
+  .graph__svg :global(.glink) {
+    stroke: var(--border-strong);
+    stroke-width: 1;
+    opacity: 0.5;
+  }
+  .graph__svg :global(.gnode) {
+    cursor: pointer;
+  }
+  .graph__svg :global(.gnode circle) {
+    stroke: var(--surface);
+    stroke-width: 1.5;
+    transition: opacity 0.15s;
+  }
+  .graph__svg :global(.gnode text) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--text);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 3px;
+    pointer-events: none;
+  }
+  .graph__svg :global(.gnode--post text) {
+    fill: var(--text-muted);
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .graph__svg :global(.gnode--root circle) {
+    fill: var(--text);
+  }
+  .graph__svg :global(.gnode--root text) {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* category/post circle colours are set inline by the client script
+     (categoryColor → registry var or a stable hashed hue) */
+
+  /* highlight state */
+  .graph__svg :global(.gnode--post.is-near text) { opacity: 1; }
+  .graph__svg.is-hovering :global(.gnode.is-dim circle) { opacity: 0.15; }
+  .graph__svg.is-hovering :global(.glink.is-dim) { opacity: 0.08; }
+  .graph__svg :global(.glink.is-active) { stroke: var(--accent); opacity: 0.9; }
+
+  .post-list__title {
+    margin: 0 0 1.25rem;
+  }
+  .post-list__group {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-top: var(--border-w) solid var(--border);
+    align-items: start;
+  }
+  .post-list__group ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  @media (max-width: 34rem) {
+    .post-list__group {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  type GNode = {
+    id: string;
+    label: string;
+    type: "root" | "category" | "post";
+    href?: string;
+    color?: string;
+    r: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    fixed?: boolean;
+    el?: SVGGElement;
+  };
+  type GLink = {
+    source: string;
+    target: string;
+    s?: GNode;
+    t?: GNode;
+    el?: SVGLineElement;
+  };
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const W = 800;
+  const H = 560;
+
+  function init() {
+    const dataEl = document.querySelector<HTMLScriptElement>("[data-graph]");
+    const svg = document.querySelector<SVGSVGElement>(".graph__svg");
+    const hint = document.querySelector<HTMLElement>("[data-graph-hint]");
+    if (!dataEl || !svg) return;
+
+    const raw = JSON.parse(dataEl.textContent || "{}");
+    const nodes: GNode[] = (raw.nodes || []).map((n: any) => ({
+      ...n,
+      x: W / 2 + (Math.random() - 0.5) * 200,
+      y: H / 2 + (Math.random() - 0.5) * 200,
+      vx: 0,
+      vy: 0,
+    }));
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const links: GLink[] = (raw.links || [])
+      .map((l: any) => ({ ...l, s: byId.get(l.source), t: byId.get(l.target) }))
+      // drop any link whose endpoints aren't both real nodes
+      .filter((l: GLink) => l.s && l.t);
+
+    // adjacency for hover highlighting
+    const neighbours = new Map<string, Set<string>>();
+    nodes.forEach((n) => neighbours.set(n.id, new Set([n.id])));
+    links.forEach((l) => {
+      neighbours.get(l.source)!.add(l.target);
+      neighbours.get(l.target)!.add(l.source);
+    });
+
+    // ---- build SVG ----
+    const linkLayer = document.createElementNS(SVGNS, "g");
+    const nodeLayer = document.createElementNS(SVGNS, "g");
+    svg.append(linkLayer, nodeLayer);
+
+    links.forEach((l) => {
+      const line = document.createElementNS(SVGNS, "line");
+      line.setAttribute("class", "glink");
+      l.el = line;
+      linkLayer.appendChild(line);
+    });
+
+    nodes.forEach((n) => {
+      const g = document.createElementNS(SVGNS, "g");
+      g.setAttribute("class", `gnode gnode--${n.type}`);
+      g.dataset.id = n.id;
+
+      const c = document.createElementNS(SVGNS, "circle");
+      c.setAttribute("r", String(n.r));
+      // colour set inline; CSS only adjusts opacity for dim/highlight states
+      if (n.color) c.setAttribute("fill", n.color);
+      g.appendChild(c);
+
+      if (n.type !== "post") {
+        const t = document.createElementNS(SVGNS, "text");
+        t.setAttribute("text-anchor", "middle");
+        t.setAttribute("dy", String(-n.r - 5));
+        t.textContent = n.label;
+        g.appendChild(t);
+      } else {
+        const t = document.createElementNS(SVGNS, "text");
+        t.setAttribute("text-anchor", "middle");
+        t.setAttribute("dy", String(-n.r - 4));
+        t.textContent =
+          n.label.length > 34 ? n.label.slice(0, 32) + "…" : n.label;
+        g.appendChild(t);
+      }
+      n.el = g;
+      nodeLayer.appendChild(g);
+    });
+
+    // ---- force simulation ----
+    let alpha = 1;
+    const REPULSION = 2600;
+    const SPRING = 0.04;
+    const LINK_LEN = 70;
+    const CENTER = 0.012;
+    const DAMP = 0.85;
+
+    function tick() {
+      // repulsion (n is tiny, O(n^2) is fine)
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          let dx = a.x - b.x;
+          let dy = a.y - b.y;
+          let d2 = dx * dx + dy * dy || 0.01;
+          const f = (REPULSION / d2) * alpha;
+          const d = Math.sqrt(d2);
+          const fx = (dx / d) * f;
+          const fy = (dy / d) * f;
+          a.vx += fx;
+          a.vy += fy;
+          b.vx -= fx;
+          b.vy -= fy;
+        }
+      }
+      // spring along links
+      for (const l of links) {
+        const a = l.s!,
+          b = l.t!;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const f = (d - LINK_LEN) * SPRING * alpha;
+        const fx = (dx / d) * f;
+        const fy = (dy / d) * f;
+        a.vx += fx;
+        a.vy += fy;
+        b.vx -= fx;
+        b.vy -= fy;
+      }
+      // centering + integrate
+      for (const n of nodes) {
+        n.vx += (W / 2 - n.x) * CENTER * alpha;
+        n.vy += (H / 2 - n.y) * CENTER * alpha;
+        if (n.fixed) {
+          n.vx = 0;
+          n.vy = 0;
+          continue;
+        }
+        n.vx *= DAMP;
+        n.vy *= DAMP;
+        n.x += n.vx;
+        n.y += n.vy;
+        n.x = Math.max(n.r, Math.min(W - n.r, n.x));
+        n.y = Math.max(n.r, Math.min(H - n.r, n.y));
+      }
+    }
+
+    function render() {
+      for (const l of links) {
+        l.el!.setAttribute("x1", String(l.s!.x));
+        l.el!.setAttribute("y1", String(l.s!.y));
+        l.el!.setAttribute("x2", String(l.t!.x));
+        l.el!.setAttribute("y2", String(l.t!.y));
+      }
+      for (const n of nodes) {
+        n.el!.setAttribute("transform", `translate(${n.x},${n.y})`);
+      }
+    }
+
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduce) {
+      for (let i = 0; i < 400; i++) {
+        alpha = Math.max(0.02, 1 - i / 400);
+        tick();
+      }
+      render();
+    } else {
+      let raf = 0;
+      const loop = () => {
+        tick();
+        render();
+        alpha *= 0.985;
+        if (alpha > 0.02) raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+      // keep a reference so a drag can reheat
+      (svg as any).__reheat = () => {
+        if (alpha <= 0.05) {
+          alpha = 0.4;
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(loop);
+        }
+      };
+    }
+
+    // ---- interaction: hover highlight ----
+    function setHover(id: string | null) {
+      if (!id) {
+        svg!.classList.remove("is-hovering");
+        nodes.forEach((n) => n.el!.classList.remove("is-dim", "is-near"));
+        links.forEach((l) => l.el!.classList.remove("is-dim", "is-active"));
+        if (hint) hint.textContent = `force graph · ${nodes.length} nodes`;
+        return;
+      }
+      const near = neighbours.get(id)!;
+      svg!.classList.add("is-hovering");
+      nodes.forEach((n) => {
+        const on = near.has(n.id);
+        n.el!.classList.toggle("is-dim", !on);
+        n.el!.classList.toggle("is-near", on && n.type === "post");
+      });
+      links.forEach((l) => {
+        const on = l.source === id || l.target === id;
+        l.el!.classList.toggle("is-active", on);
+        l.el!.classList.toggle("is-dim", !on);
+      });
+      const node = byId.get(id);
+      if (hint && node) hint.textContent = node.label;
+    }
+
+    nodeLayer.addEventListener("pointerover", (e) => {
+      const g = (e.target as Element).closest(".gnode") as SVGGElement | null;
+      if (g?.dataset.id) setHover(g.dataset.id);
+    });
+    nodeLayer.addEventListener("pointerout", (e) => {
+      const to = (e as PointerEvent).relatedTarget as Element | null;
+      if (!to || !to.closest?.(".gnode")) setHover(null);
+    });
+
+    // ---- interaction: click to open ----
+    nodeLayer.addEventListener("click", (e) => {
+      if (dragMoved) return;
+      const g = (e.target as Element).closest(".gnode") as SVGGElement | null;
+      const id = g?.dataset.id;
+      if (!id) return;
+      const node = byId.get(id);
+      if (node?.href) window.location.href = node.href;
+    });
+
+    // ---- interaction: drag ----
+    let dragging: GNode | null = null;
+    let dragMoved = false;
+
+    function toSvg(e: PointerEvent) {
+      const pt = svg!.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const m = svg!.getScreenCTM();
+      if (!m) return { x: 0, y: 0 };
+      const p = pt.matrixTransform(m.inverse());
+      return { x: p.x, y: p.y };
+    }
+
+    nodeLayer.addEventListener("pointerdown", (e) => {
+      const g = (e.target as Element).closest(".gnode") as SVGGElement | null;
+      const id = g?.dataset.id;
+      if (!id) return;
+      dragging = byId.get(id) || null;
+      dragMoved = false;
+      if (dragging) {
+        dragging.fixed = true;
+        (e.target as Element).setPointerCapture?.(e.pointerId);
+      }
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      dragMoved = true;
+      const p = toSvg(e);
+      dragging.x = p.x;
+      dragging.y = p.y;
+      (svg as any).__reheat?.();
+      if (reduce) render();
+    });
+    svg.addEventListener("pointerup", () => {
+      if (dragging) dragging.fixed = false;
+      dragging = null;
+    });
+  }
+
+  init();
+</script>

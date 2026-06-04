@@ -1,0 +1,146 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import { formatDate, isoDate } from "../lib/format";
+import CategoryBadge from "../components/CategoryBadge.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  categories: string[];
+  pubDate: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  severity?: string;
+  cves?: string[];
+  iocs?: string[];
+}
+
+const {
+  title,
+  description,
+  categories,
+  pubDate,
+  updatedDate,
+  tags = [],
+  severity,
+  cves = [],
+  iocs = [],
+} = Astro.props;
+---
+<BaseLayout title={title} description={description}>
+  <article class="post">
+    <div class="post__meta mono">
+      {categories.map((c) => <CategoryBadge slug={c} href={`/${c}`} />)}
+      {severity && (
+        <span class:list={["badge", `badge--sev-${severity}`]}>{severity}</span>
+      )}
+      <time datetime={isoDate(pubDate)}>{formatDate(pubDate)}</time>
+      {updatedDate && (
+        <span class="post__updated">updated {formatDate(updatedDate)}</span>
+      )}
+    </div>
+
+    <h1 class="post__title">{title}</h1>
+    <p class="post__lede">{description}</p>
+
+    {(cves.length > 0 || iocs.length > 0) && (
+      <aside class="post__intel">
+        {cves.length > 0 && (
+          <div class="post__intel-row">
+            <span class="mono post__intel-label">CVEs</span>
+            <ul class="mono">{cves.map((c) => <li>{c}</li>)}</ul>
+          </div>
+        )}
+        {iocs.length > 0 && (
+          <div class="post__intel-row">
+            <span class="mono post__intel-label">IOCs</span>
+            <ul class="mono">{iocs.map((i) => <li>{i}</li>)}</ul>
+          </div>
+        )}
+      </aside>
+    )}
+
+    <hr />
+
+    <div class="post__body">
+      <slot />
+    </div>
+
+    {tags.length > 0 && (
+      <ul class="post__tags mono">
+        {tags.map((t) => <li>#{t}</li>)}
+      </ul>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .post {
+    max-width: 44rem;
+    margin-inline: auto;
+  }
+  .post__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .post__title {
+    margin: 0.7rem 0 0.5rem;
+    font-size: 2.1rem;
+  }
+  .post__lede {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+  .post__intel {
+    border: var(--border-w) solid var(--border);
+    border-left: 3px solid var(--cat-threat-intel);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 0.9rem 1.1rem;
+  }
+  .post__intel-row {
+    display: flex;
+    gap: 0.9rem;
+    align-items: baseline;
+  }
+  .post__intel-row + .post__intel-row {
+    margin-top: 0.5rem;
+  }
+  .post__intel-label {
+    color: var(--cat-threat-intel);
+    min-width: 3rem;
+  }
+  .post__intel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+  .post__body :global(h2) {
+    border-bottom: var(--border-w) solid var(--border);
+    padding-bottom: 0.3rem;
+  }
+  .post__body :global(img) {
+    border-radius: var(--radius);
+    border: var(--border-w) solid var(--border);
+  }
+  .post__body :global(.katex-display) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.4rem 0;
+  }
+  .post__tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 2.5rem 0 0;
+    padding: 1rem 0 0;
+    border-top: var(--border-w) solid var(--border);
+    color: var(--text-muted);
+  }
+</style>

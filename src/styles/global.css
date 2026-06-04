@@ -1,0 +1,290 @@
+/* ============================================================
+   hyperlisk.ca — design system
+   2010s-retro-minimal, modern colour, dark + light
+   ============================================================ */
+
+/* ---- design tokens ---- */
+:root {
+  /* type */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", "JetBrains Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* spacing / shape — flat, slightly boxy, very 2010s */
+  --radius: 5px;
+  --border-w: 1px;
+  --content-w: 46rem;
+  --wide-w: 68rem;
+  --gap: 1.5rem;
+
+  /* tell the browser this page owns its theming — opt out of auto-darkening */
+  color-scheme: light;
+
+  /* light theme (default) */
+  --bg: #f6f6f3;
+  --bg-grid: #ececea;
+  --surface: #ffffff;
+  --surface-2: #fbfbf9;
+  --border: #e1e1db;
+  --border-strong: #cdcdc6;
+  --text: #1c1c1a;
+  --text-muted: #6d6d66;
+  --accent: #2456d6;
+  --accent-hover: #1b43ad;
+  --accent-soft: #e8eefb;
+
+  /* category accents */
+  --cat-threat-intel: #d9480f;
+  --cat-programming: #1971c2;
+  --cat-physics: #6741d9;
+  --cat-quantum: #0c8599;
+  --cat-math: #2f9e44;
+  --cat-music: #c2255c;
+  --cat-dash: #0b7a5a;
+
+  /* severity scale */
+  --sev-info: #868e96;
+  --sev-low: #2f9e44;
+  --sev-medium: #f08c00;
+  --sev-high: #e8590c;
+  --sev-critical: #e03131;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #151518;
+  --bg-grid: #1d1d22;
+  --surface: #1e1e24;
+  --surface-2: #232329;
+  --border: #2d2d36;
+  --border-strong: #3a3a45;
+  --text: #e8e8ea;
+  --text-muted: #989aa3;
+  --accent: #6f9dff;
+  --accent-hover: #93b6ff;
+  --accent-soft: #1e2740;
+
+  --cat-threat-intel: #ff8a5c;
+  --cat-programming: #6cb6ff;
+  --cat-physics: #b197fc;
+  --cat-quantum: #3bc9db;
+  --cat-math: #69db7c;
+  --cat-music: #faa2c1;
+  --cat-dash: #4cd4a8;
+
+  --sev-info: #adb5bd;
+  --sev-low: #51cf66;
+  --sev-medium: #ffc145;
+  --sev-high: #ff922b;
+  --sev-critical: #ff6b6b;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- reset-ish ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -1px -1px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* ---- layout helpers ---- */
+.container {
+  width: 100%;
+  max-width: var(--content-w);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+.container--wide {
+  max-width: var(--wide-w);
+}
+main {
+  flex: 1 0 auto;
+  padding-block: 2.5rem 4rem;
+}
+
+/* ---- typography ---- */
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 2rem 0 0.75rem;
+  letter-spacing: -0.01em;
+}
+h1 {
+  font-size: 2rem;
+  margin-top: 0;
+}
+h2 {
+  font-size: 1.45rem;
+}
+h3 {
+  font-size: 1.18rem;
+}
+p {
+  margin: 0 0 1rem;
+}
+hr {
+  border: none;
+  border-top: var(--border-w) solid var(--border);
+  margin: 2rem 0;
+}
+blockquote {
+  margin: 1.5rem 0;
+  padding: 0.25rem 1.1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--surface-2);
+  border: var(--border-w) solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  padding: 1rem 1.1rem;
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* ---- the retro top accent rule ---- */
+.accent-rule {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--cat-threat-intel),
+    var(--cat-music),
+    var(--cat-physics),
+    var(--cat-quantum),
+    var(--cat-math)
+  );
+}
+
+/* ---- mono label, used for nav + meta ---- */
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---- badges / tags ---- */
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+  border: var(--border-w) solid var(--border-strong);
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+/* generic category badge — colour supplied inline via --badge-color */
+.badge--cat {
+  color: var(--badge-color, var(--text-muted));
+  border-color: color-mix(in srgb, var(--badge-color, var(--border-strong)) 40%, transparent);
+}
+.badge--dash {
+  color: var(--cat-dash);
+  border-color: color-mix(in srgb, var(--cat-dash) 40%, transparent);
+}
+.badge--sev-info { color: var(--sev-info); }
+.badge--sev-low { color: var(--sev-low); }
+.badge--sev-medium { color: var(--sev-medium); }
+.badge--sev-high { color: var(--sev-high); }
+.badge--sev-critical {
+  color: #fff;
+  background: var(--sev-critical);
+  border-color: var(--sev-critical);
+}
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius);
+  border: var(--border-w) solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ---- screen-reader only ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
