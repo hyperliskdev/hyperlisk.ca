@@ -1,26 +1,106 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+// EDIT ME: drop your real profile URLs in here.
+const links = [
+  { label: "github", href: "https://github.com/hyperliskdev" },
+  { label: "linkedin", href: "https://www.linkedin.com/in/carter-tomlenovich" },
+  { label: "rss", href: "/rss.xml" },
+];
+
+const interests = ["physics", "quantum computing", "math", "music"];
 ---
-<BaseLayout title="about" description="About hyperlisk.">
-  <article class="prose">
+<BaseLayout
+  title="about"
+  description="Carter Tomlenovich — cybersecurity analyst and programmer. Notes on threat intel, tooling, and whatever else I'm nerding out on."
+>
+  <article class="about">
+    <p class="about__kicker mono">// carter tomlenovich</p>
     <h1>About</h1>
-    <p>
-      hyperlisk is where I write up security research, share programming
-      notes, and surface live dashboards built on my own tooling.
+
+    <p class="about__lede">
+      Cybersecurity Analyst & Programmer
     </p>
-    <h2>What you'll find here</h2>
-    <ul>
-      <li><strong>threat-intel</strong> — malware triage, IOCs, detections.</li>
-      <li><strong>programming</strong> — tooling and engineering write-ups.</li>
-      <li><strong>dashboards</strong> — live data from self-hosted backends.</li>
+
+    <h2>What I do</h2>
+    <p>
+      Most of my time goes to threat intelligence and analysis — static and
+      dynamic triage, reverse engineering, and turning messy artifacts into
+      something actionable. When the existing tools don't cut it, I write my
+      own, usually in <strong>Rust</strong> or Python.
+    </p>
+
+    <h2>What I write about</h2>
+    <ul class="about__list">
+      <li>
+        <strong>threat-intel</strong> — malware triage, IOCs, vulnerability
+        analysis, and detection notes.
+      </li>
+      <li>
+        <strong>programming</strong> — tooling, languages, and the things I
+        built or broke along the way.
+      </li>
     </ul>
-    <h2>Contact</h2>
-    <p>Replace this with your real links.</p>
+    <p>
+      Categories here are free-form, so posts get tagged with whatever actually
+      fits rather than forced into a few buckets. The
+      <a href="/posts">posts graph</a> maps everything by topic.
+    </p>
+
+    <h2>Beyond the day job</h2>
+    <p>
+      I'm endlessly curious outside of security, too. Expect the occasional
+      detour into anything math, physics, quantum computing or really any engineering or science news.
+    </p>
+
+    <h2>Elsewhere</h2>
+    <ul class="about__links mono">
+      {links.map((l) => (
+        <li>
+          <a href={l.href} rel="me noopener" target={l.href.startsWith("http") ? "_blank" : undefined}>
+            {l.label} →
+          </a>
+        </li>
+      ))}
+    </ul>
   </article>
 </BaseLayout>
 
 <style>
-  .prose {
+  .about {
     max-width: 42rem;
+  }
+  .about__kicker {
+    color: var(--accent);
+    margin: 0 0 0.4rem;
+  }
+  .about h1 {
+    margin: 0 0 0.75rem;
+  }
+  .about__lede {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+  .about__list {
+    padding-left: 1.1rem;
+  }
+  .about__list li {
+    margin-bottom: 0.4rem;
+  }
+  .about__tags,
+  .about__links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0;
+    margin: 0.75rem 0 0;
+  }
+  .about__tags .badge {
+    --badge-color: var(--accent);
+  }
+  .about__links {
+    gap: 1.25rem;
   }
 </style>

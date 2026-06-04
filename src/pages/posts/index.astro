@@ -82,6 +82,12 @@ const grouped = usedSlugs.map((slug) => ({
     </p>
   </header>
 
+  {allPosts.length === 0 ? (
+    <p class="posts-empty mono">
+      No posts yet — the graph will fill in as I publish. Check back soon.
+    </p>
+  ) : (
+  <Fragment>
   <figure class="graph" aria-hidden="true">
     <svg class="graph__svg" viewBox="0 0 800 560" role="presentation"></svg>
     <figcaption class="graph__foot mono">
@@ -113,6 +119,8 @@ const grouped = usedSlugs.map((slug) => ({
       </div>
     ))}
   </section>
+  </Fragment>
+  )}
 </BaseLayout>
 
 <style>
@@ -121,6 +129,14 @@ const grouped = usedSlugs.map((slug) => ({
   }
   .posts-head h1 {
     margin: 0 0 0.4rem;
+  }
+  .posts-empty {
+    color: var(--text-muted);
+    border: var(--border-w) dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 2rem;
+    text-align: center;
   }
   .posts-head p {
     color: var(--text-muted);

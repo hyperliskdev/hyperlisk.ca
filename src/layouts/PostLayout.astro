@@ -1,7 +1,13 @@
 ---
+import type { MarkdownHeading } from "astro";
 import BaseLayout from "./BaseLayout.astro";
 import { formatDate, isoDate } from "../lib/format";
 import CategoryBadge from "../components/CategoryBadge.astro";
+
+interface AdjLink {
+  href: string;
+  title: string;
+}
 
 interface Props {
   title: string;
@@ -13,6 +19,10 @@ interface Props {
   severity?: string;
   cves?: string[];
   iocs?: string[];
+  minutes?: number;
+  headings?: MarkdownHeading[];
+  newer?: AdjLink;
+  older?: AdjLink;
 }
 
 const {
@@ -25,7 +35,15 @@ const {
   severity,
   cves = [],
   iocs = [],
+  minutes,
+  headings = [],
+  newer,
+  older,
 } = Astro.props;
+
+// TOC from top-level section headings only
+const toc = headings.filter((h) => h.depth === 2);
+const showToc = toc.length >= 3;
 ---
 <BaseLayout
   title={title}
@@ -35,12 +53,15 @@ const {
   updatedDate={updatedDate}
 >
   <article class="post">
+    <a href="/posts" class="post__back mono">← all posts</a>
+
     <div class="post__meta mono">
       {categories.map((c) => <CategoryBadge slug={c} href={`/${c}`} />)}
       {severity && (
         <span class:list={["badge", `badge--sev-${severity}`]}>{severity}</span>
       )}
       <time datetime={isoDate(pubDate)}>{formatDate(pubDate)}</time>
+      {minutes && <span class="post__read">{minutes} min read</span>}
       {updatedDate && (
         <span class="post__updated">updated {formatDate(updatedDate)}</span>
       )}
@@ -66,6 +87,17 @@ const {
       </aside>
     )}
 
+    {showToc && (
+      <nav class="post__toc" aria-label="Table of contents">
+        <p class="post__toc-title mono">Contents</p>
+        <ol>
+          {toc.map((h) => (
+            <li><a href={`#${h.slug}`}>{h.text}</a></li>
+          ))}
+        </ol>
+      </nav>
+    )}
+
     <hr />
 
     <div class="post__body">
@@ -77,6 +109,23 @@ const {
         {tags.map((t) => <li>#{t}</li>)}
       </ul>
     )}
+
+    {(newer || older) && (
+      <nav class="post__nav mono" aria-label="More posts">
+        {older ? (
+          <a class="post__nav-link post__nav-link--prev" href={older.href}>
+            <span class="post__nav-dir">← older</span>
+            <span class="post__nav-title">{older.title}</span>
+          </a>
+        ) : <span />}
+        {newer ? (
+          <a class="post__nav-link post__nav-link--next" href={newer.href}>
+            <span class="post__nav-dir">newer →</span>
+            <span class="post__nav-title">{newer.title}</span>
+          </a>
+        ) : <span />}
+      </nav>
+    )}
   </article>
 </BaseLayout>
 
@@ -85,12 +134,94 @@ const {
     max-width: 44rem;
     margin-inline: auto;
   }
+  .post__back {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    color: var(--text-muted);
+  }
+  .post__back:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
   .post__meta {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     color: var(--text-muted);
     flex-wrap: wrap;
+  }
+  .post__read::before,
+  .post__updated::before {
+    content: "·";
+    margin-right: 0.6rem;
+    color: var(--border-strong);
+  }
+  .post__toc {
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 0.9rem 1.2rem;
+    margin-top: 1.5rem;
+  }
+  .post__toc-title {
+    margin: 0 0 0.4rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+  }
+  .post__toc ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .post__toc a {
+    color: var(--text);
+  }
+  .post__nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: var(--border-w) solid var(--border);
+  }
+  .post__nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.85rem 1rem;
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .post__nav-link:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+  .post__nav-link--next {
+    text-align: right;
+  }
+  .post__nav-dir {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .post__nav-title {
+    color: var(--text);
+    font-size: 0.92rem;
+  }
+  @media (max-width: 34rem) {
+    .post__nav {
+      grid-template-columns: 1fr;
+    }
+    .post__nav-link--next {
+      text-align: left;
+    }
   }
   .post__title {
     margin: 0.7rem 0 0.5rem;
@@ -125,6 +256,11 @@ const {
     margin: 0;
     padding: 0;
     overflow-wrap: anywhere;
+  }
+  .post__body :global(h2),
+  .post__body :global(h3),
+  .post__body :global(h4) {
+    scroll-margin-top: 4.5rem;
   }
   .post__body :global(h2) {
     border-bottom: var(--border-w) solid var(--border);

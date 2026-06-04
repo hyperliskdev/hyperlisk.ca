@@ -1,19 +1,31 @@
 ---
 import { getCollection, type CollectionEntry } from "astro:content";
 import PostLayout from "../../layouts/PostLayout.astro";
+import { readingTime } from "../../lib/format";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
-  return posts.map((post) => ({
+  const posts = (await getCollection("posts")).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+  );
+  return posts.map((post, i) => ({
     params: { slug: post.slug },
-    props: { post },
+    props: {
+      post,
+      newer: posts[i - 1] ?? null, // chronologically newer
+      older: posts[i + 1] ?? null, // chronologically older
+    },
   }));
 }
 
-type Props = { post: CollectionEntry<"posts"> };
-const { post } = Astro.props;
-const { Content } = await post.render();
+type Adjacent = CollectionEntry<"posts"> | null;
+type Props = { post: CollectionEntry<"posts">; newer: Adjacent; older: Adjacent };
+
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await post.render();
 const d = post.data;
+
+const toLink = (p: Adjacent) =>
+  p ? { href: `/posts/${p.slug}`, title: p.data.title } : undefined;
 ---
 <PostLayout
   title={d.title}
@@ -25,6 +37,10 @@ const d = post.data;
   severity={d.severity}
   cves={d.cves}
   iocs={d.iocs}
+  minutes={readingTime(post.body)}
+  headings={headings}
+  newer={toLink(newer)}
+  older={toLink(older)}
 >
   <Content />
 </PostLayout>

@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostCard from "../components/PostCard.astro";
 import CategoryBadge from "../components/CategoryBadge.astro";
-import { categoryLabel, categoryBlurb, categoryColor } from "../lib/categories";
+import { categoryBlurb, categoryColor } from "../lib/categories";
 
 const allPosts = (await getCollection("posts"))
   .filter((p) => !p.data.draft)
@@ -16,13 +16,10 @@ const counts = new Map<string, number>();
 for (const p of allPosts)
   for (const c of p.data.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
 const topics = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!);
-
-// keep the hero kicker in sync with whatever categories exist
-const kicker = topics.map((s) => categoryLabel(s)).join(" · ");
 ---
 <BaseLayout title="hyperlisk" wide>
   <section class="hero">
-    <p class="hero__kicker mono">// carter tomlenovich{kicker}</p>
+    <p class="hero__kicker mono">// carter tomlenovich</p>
     <h1 class="hero__title">hyperlisk</h1>
     <p class="hero__lede">
       A place for me to organize my thoughts.
@@ -33,35 +30,41 @@ const kicker = topics.map((s) => categoryLabel(s)).join(" · ");
     </div>
   </section>
 
-  <section class="home-section">
-    <h2 class="home-section__title">Topics</h2>
-    <div class="topic-grid">
-      {topics.map((slug) => (
-        <a href={`/${slug}`} class="topic" style={`--topic-color:${categoryColor(slug)}`}>
-          <CategoryBadge slug={slug} />
-          {categoryBlurb(slug) && <p>{categoryBlurb(slug)}</p>}
-        </a>
-      ))}
-    </div>
-  </section>
+  {topics.length > 0 && (
+    <section class="home-section">
+      <h2 class="home-section__title">Topics</h2>
+      <div class="topic-grid">
+        {topics.map((slug) => (
+          <a href={`/${slug}`} class="topic" style={`--topic-color:${categoryColor(slug)}`}>
+            <CategoryBadge slug={slug} />
+            {categoryBlurb(slug) && <p>{categoryBlurb(slug)}</p>}
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
 
   <section class="home-section">
     <div class="home-section__head">
       <h2 class="home-section__title">Recent posts</h2>
     </div>
-    <div class="card-grid">
-      {recent.map((p) => (
-        <PostCard
-          href={`/posts/${p.slug}`}
-          title={p.data.title}
-          description={p.data.description}
-          pubDate={p.data.pubDate}
-          tags={p.data.tags}
-          categories={p.data.categories}
-          severity={p.data.severity}
-        />
-      ))}
-    </div>
+    {recent.length > 0 ? (
+      <div class="card-grid">
+        {recent.map((p) => (
+          <PostCard
+            href={`/posts/${p.slug}`}
+            title={p.data.title}
+            description={p.data.description}
+            pubDate={p.data.pubDate}
+            tags={p.data.tags}
+            categories={p.data.categories}
+            severity={p.data.severity}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="home-empty mono">No posts published yet — first one's coming soon.</p>
+    )}
   </section>
 
   <section class="home-section">
@@ -167,5 +170,13 @@ const kicker = topics.map((s) => categoryLabel(s)).join(" · ");
     color: var(--text-muted);
     font-size: 0.95rem;
     max-width: 40rem;
+  }
+  .home-empty {
+    color: var(--text-muted);
+    border: var(--border-w) dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 1.5rem;
+    margin: 0;
   }
 </style>
