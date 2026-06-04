@@ -84,11 +84,19 @@ const grouped = usedSlugs.map((slug) => ({
 
   <figure class="graph" aria-hidden="true">
     <svg class="graph__svg" viewBox="0 0 800 560" role="presentation"></svg>
-    <figcaption class="graph__hint mono">
-      <span class="graph__hint-active" data-graph-hint>force graph · {nodes.length} nodes</span>
+    <figcaption class="graph__foot mono">
+      <ul class="graph__legend">
+        {usedSlugs.map((slug) => (
+          <li>
+            <span class="graph__swatch" style={`background:${categoryColor(slug)}`}></span>
+            {categoryLabel(slug)}
+          </li>
+        ))}
+      </ul>
+      <span class="graph__hint" data-graph-hint>{nodes.length} nodes · {links.length} links</span>
     </figcaption>
   </figure>
-  <script type="application/json" data-graph set:html={JSON.stringify(graph)} />
+  <script is:inline type="application/json" data-graph set:html={JSON.stringify(graph)} />
 
   <section class="post-list">
     <h2 class="post-list__title">All posts</h2>
@@ -138,13 +146,39 @@ const grouped = usedSlugs.map((slug) => ({
   .graph__svg:active {
     cursor: grabbing;
   }
-  .graph__hint {
+  .graph__foot {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
     padding: 0.5rem 0.85rem;
     border-top: var(--border-w) solid var(--border);
     color: var(--text-muted);
     font-size: 0.75rem;
+  }
+  .graph__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+  }
+  .graph__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .graph__swatch {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .graph__hint {
+    margin-left: auto;
+    white-space: nowrap;
   }
 
   /* graph elements (created by the client script) */
@@ -423,7 +457,8 @@ const grouped = usedSlugs.map((slug) => ({
         svg!.classList.remove("is-hovering");
         nodes.forEach((n) => n.el!.classList.remove("is-dim", "is-near"));
         links.forEach((l) => l.el!.classList.remove("is-dim", "is-active"));
-        if (hint) hint.textContent = `force graph · ${nodes.length} nodes`;
+        if (hint)
+          hint.textContent = `${nodes.length} nodes · ${links.length} links`;
         return;
       }
       const near = neighbours.get(id)!;

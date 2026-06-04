@@ -26,7 +26,7 @@ const isActive = (href: string) => {
 
 const nav = [
   { href: "/posts", label: "posts" },
-  { href: "/dashboards", label: "dashboards" },
+  { label: "dashboards", soon: true },
   { href: "/about", label: "about" },
 ];
 ---
@@ -38,15 +38,21 @@ const nav = [
     </a>
 
     <nav class="site-nav mono" aria-label="Primary">
-      {nav.map((item) => (
-        <a
-          href={item.href}
-          class:list={["site-nav__link", { "is-active": isActive(item.href) }]}
-          aria-current={isActive(item.href) ? "page" : undefined}
-        >
-          {item.label}
-        </a>
-      ))}
+      {nav.map((item) =>
+        item.soon ? (
+          <span class="site-nav__link site-nav__link--soon" aria-disabled="true">
+            {item.label}<span class="site-nav__soon">soon</span>
+          </span>
+        ) : (
+          <a
+            href={item.href}
+            class:list={["site-nav__link", { "is-active": isActive(item.href!) }]}
+            aria-current={isActive(item.href!) ? "page" : undefined}
+          >
+            {item.label}
+          </a>
+        ),
+      )}
     </nav>
 
     <ThemeToggle />
@@ -99,6 +105,23 @@ const nav = [
   .site-nav__link.is-active {
     color: var(--text);
     border-bottom-color: var(--accent);
+  }
+  .site-nav__link--soon {
+    color: var(--text-muted);
+    opacity: 0.65;
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .site-nav__soon {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.05em 0.35em;
+    border: var(--border-w) solid var(--border-strong);
+    border-radius: 3px;
+    color: var(--text-muted);
   }
   @media (max-width: 38rem) {
     .site-header__inner {

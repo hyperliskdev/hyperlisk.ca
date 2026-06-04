@@ -4,7 +4,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PostCard from "../components/PostCard.astro";
 import CategoryBadge from "../components/CategoryBadge.astro";
 import { categoryLabel, categoryBlurb, categoryColor } from "../lib/categories";
-import { dashboards } from "../lib/dashboards";
 
 const allPosts = (await getCollection("posts"))
   .filter((p) => !p.data.draft)
@@ -18,13 +17,8 @@ for (const p of allPosts)
   for (const c of p.data.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
 const topics = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!);
 
-// keep the hero copy in sync with whatever categories exist
+// keep the hero kicker in sync with whatever categories exist
 const kicker = topics.map((s) => categoryLabel(s)).join(" · ");
-const labels = topics.map((s) => categoryLabel(s));
-const ledeTopics =
-  labels.length > 1
-    ? `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`
-    : labels[0] ?? "";
 ---
 <BaseLayout title="hyperlisk" wide>
   <section class="hero">
@@ -35,7 +29,7 @@ const ledeTopics =
     </p>
     <div class="hero__links mono">
       <a class="btn" href="/posts">explore posts →</a>
-      <a class="btn" href="/dashboards">dashboards →</a>
+      <span class="btn btn--soon" aria-disabled="true">dashboards · soon</span>
     </div>
   </section>
 
@@ -73,16 +67,13 @@ const ledeTopics =
   <section class="home-section">
     <div class="home-section__head">
       <h2 class="home-section__title">Dashboards</h2>
-      <a class="mono" href="/dashboards">view all →</a>
     </div>
-    <div class="card-grid">
-      {dashboards.map((d) => (
-        <a href={`/dashboards#${d.slug}`} class="mini-dash">
-          <span class="badge badge--dash">live</span>
-          <h3>{d.title}</h3>
-          <p>{d.description}</p>
-        </a>
-      ))}
+    <div class="dash-soon">
+      <span class="badge badge--dash">coming soon</span>
+      <p>
+        Live panels fed by my own self-hosted Rust collectors are in the works.
+        Check back soon.
+      </p>
     </div>
   </section>
 </BaseLayout>
@@ -160,25 +151,21 @@ const ledeTopics =
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
     gap: var(--gap);
   }
-  .mini-dash {
-    border: var(--border-w) solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface);
-    box-shadow: var(--shadow);
-    padding: 1.1rem 1.25rem;
-    color: var(--text);
-  }
-  .mini-dash:hover {
-    border-color: var(--cat-dash);
-    text-decoration: none;
-  }
-  .mini-dash h3 {
-    margin: 0.6rem 0 0.35rem;
-    font-size: 1.1rem;
-  }
-  .mini-dash p {
-    margin: 0;
+  .btn--soon {
     color: var(--text-muted);
-    font-size: 0.92rem;
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+  .dash-soon {
+    border: var(--border-w) dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 1.25rem 1.4rem;
+  }
+  .dash-soon p {
+    margin: 0.7rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 40rem;
   }
 </style>

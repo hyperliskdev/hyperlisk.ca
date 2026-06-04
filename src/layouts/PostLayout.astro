@@ -27,7 +27,13 @@ const {
   iocs = [],
 } = Astro.props;
 ---
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+  publishDate={pubDate}
+  updatedDate={updatedDate}
+>
   <article class="post">
     <div class="post__meta mono">
       {categories.map((c) => <CategoryBadge slug={c} href={`/${c}`} />)}

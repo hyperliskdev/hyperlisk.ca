@@ -1,50 +1,46 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import LiveDashboard from "../../components/LiveDashboard.astro";
-import { dashboards } from "../../lib/dashboards";
+// NOTE: the live dashboard pieces (src/components/LiveDashboard.astro,
+// src/lib/dashboards.ts) are intentionally kept for when the Rust backends
+// are ready. This page is a placeholder until then.
 ---
 <BaseLayout
   title="dashboards"
-  description="Live dashboards fed by self-hosted Rust backends."
+  description="Live dashboards fed by self-hosted Rust backends — coming soon."
   wide
 >
-  <header class="list-head">
-    <span class="badge badge--dash">live</span>
+  <section class="soon">
+    <span class="badge badge--dash">coming soon</span>
     <h1>Dashboards</h1>
     <p>
-      Live data from my own collectors. Each panel polls a self-hosted Rust
-      backend — if a panel says <em>offline</em>, the backend just isn't
-      running.
+      I'm building a set of live panels fed by my own self-hosted Rust
+      collectors — security telemetry, honeypot activity, and more. They're not
+      wired up yet, but they're on the way.
     </p>
-  </header>
-
-  <div class="dash-grid">
-    {dashboards.map((d) => (
-      <div id={d.slug}>
-        <LiveDashboard dashboard={d} />
-      </div>
-    ))}
-  </div>
+    <p class="soon__cta mono">
+      In the meantime, <a href="/posts">read the posts →</a>
+    </p>
+  </section>
 </BaseLayout>
 
 <style>
-  .list-head {
-    margin-bottom: 2rem;
-  }
-  .list-head h1 {
-    margin: 0.6rem 0 0.25rem;
-  }
-  .list-head p {
-    color: var(--text-muted);
-    margin: 0;
+  .soon {
     max-width: 42rem;
+    margin: 2rem auto;
+    text-align: center;
+    border: var(--border-w) dashed var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    padding: 3rem 2rem;
   }
-  .dash-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-    gap: var(--gap);
+  .soon h1 {
+    margin: 1rem 0 0.6rem;
   }
-  .dash-grid > div {
-    scroll-margin-top: 4.5rem;
+  .soon p {
+    color: var(--text-muted);
+    margin: 0 auto 0.75rem;
+  }
+  .soon__cta {
+    margin-top: 1.25rem;
   }
 </style>

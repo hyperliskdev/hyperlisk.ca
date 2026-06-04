@@ -8,16 +8,40 @@ interface Props {
   title: string;
   description?: string;
   wide?: boolean;
+  /** "website" (default) or "article" for post pages. */
+  ogType?: "website" | "article";
+  /** Absolute or site-relative OG image. Defaults to the site card. */
+  image?: string;
+  publishDate?: Date;
+  updatedDate?: Date;
 }
 
 const {
   title,
   description = "Threat intel, programming notes, and live dashboards.",
   wide = false,
+  ogType = "website",
+  image = "/og.png",
+  publishDate,
+  updatedDate,
 } = Astro.props;
 
 const fullTitle = title === "hyperlisk" ? title : `${title} · hyperlisk`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": ogType === "article" ? "BlogPosting" : "WebSite",
+  name: "hyperlisk",
+  headline: title,
+  description,
+  url: canonical.href,
+  image: ogImage.href,
+  ...(publishDate && { datePublished: publishDate.toISOString() }),
+  ...(updatedDate && { dateModified: updatedDate.toISOString() }),
+  author: { "@type": "Person", name: "Carter Tomlenovich" },
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -30,11 +54,24 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="hyperlisk" href="/rss.xml" />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="hyperlisk" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={ogImage} />
+    {publishDate && (
+      <meta property="article:published_time" content={publishDate.toISOString()} />
+    )}
+    {updatedDate && (
+      <meta property="article:modified_time" content={updatedDate.toISOString()} />
+    )}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
     {/* set theme before paint to avoid flash */}
     <script is:inline>
