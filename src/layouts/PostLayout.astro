@@ -275,6 +275,33 @@ const showToc = toc.length >= 3;
     overflow-y: hidden;
     padding: 0.4rem 0;
   }
+  .post__body :global(.mermaid) {
+    background: var(--surface-2);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 2.5rem 0;
+    
+    /* Break out of the 44rem article column to wide 68rem layout */
+    width: min(var(--wide-w), 100vw - 2.5rem);
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Enable native resizing */
+    resize: both;
+    overflow: auto;
+    min-height: 300px;
+    height: 600px;
+  }
+  .post__body :global(.mermaid svg) {
+    display: block;
+    margin: 0 auto;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
   .post__tags {
     list-style: none;
     display: flex;
@@ -286,3 +313,65 @@ const showToc = toc.length >= 3;
     color: var(--text-muted);
   }
 </style>
+
+<script>
+  async function initMermaid() {
+    const elements = document.querySelectorAll(".mermaid");
+    if (elements.length === 0) return;
+
+    // Dynamically import mermaid to avoid large initial JS payload
+    const { default: mermaid } = await import("mermaid");
+
+    const getTheme = () => document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "default";
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: getTheme(),
+      securityLevel: "loose",
+      useMaxWidth: true, // Enables responsive scaling with the resizable container
+    });
+
+    async function render() {
+      elements.forEach((el) => {
+        if (!el.hasAttribute("data-original")) {
+          el.setAttribute("data-original", el.textContent || "");
+        } else {
+          el.textContent = el.getAttribute("data-original");
+          el.removeAttribute("data-processed");
+          el.removeAttribute("id");
+        }
+      });
+
+      try {
+        await mermaid.run({
+          querySelector: ".mermaid",
+        });
+      } catch (err) {
+        console.error("Mermaid rendering failed:", err);
+      }
+    }
+
+    await render();
+
+    // Re-render when theme changes dynamically
+    const observer = new MutationObserver(async (mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === "data-theme") {
+          mermaid.initialize({
+            theme: getTheme(),
+          });
+          await render();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  }
+
+  // Initialise on load
+  initMermaid();
+</script>
+

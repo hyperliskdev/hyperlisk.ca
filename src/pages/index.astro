@@ -44,11 +44,11 @@ const topics = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!
     </section>
   )}
 
-  <section class="home-section">
-    <div class="home-section__head">
-      <h2 class="home-section__title">Recent posts</h2>
-    </div>
-    {recent.length > 0 ? (
+  {recent.length > 0 && (
+    <section class="home-section">
+      <div class="home-section__head">
+        <h2 class="home-section__title">Recent posts</h2>
+      </div>
       <div class="card-grid">
         {recent.map((p) => (
           <PostCard
@@ -62,10 +62,8 @@ const topics = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!
           />
         ))}
       </div>
-    ) : (
-      <p class="home-empty mono">No posts published yet — first one's coming soon.</p>
-    )}
-  </section>
+    </section>
+  )}
 
   <section class="home-section">
     <div class="home-section__head">
@@ -171,12 +169,5 @@ const topics = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!
     font-size: 0.95rem;
     max-width: 40rem;
   }
-  .home-empty {
-    color: var(--text-muted);
-    border: var(--border-w) dashed var(--border-strong);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    padding: 1.5rem;
-    margin: 0;
-  }
+
 </style>
