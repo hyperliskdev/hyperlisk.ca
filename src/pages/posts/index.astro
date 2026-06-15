@@ -63,11 +63,6 @@ for (const p of allPosts) {
 
 const graph = { nodes, links };
 
-// posts grouped by category for the accessible list / no-JS fallback
-const grouped = usedSlugs.map((slug) => ({
-  slug,
-  posts: allPosts.filter((p) => p.data.categories.includes(slug)),
-}));
 ---
 <BaseLayout
   title="posts"
@@ -106,18 +101,18 @@ const grouped = usedSlugs.map((slug) => ({
 
   <section class="post-list">
     <h2 class="post-list__title">All posts</h2>
-    {grouped.map(({ slug, posts }) => (
-      <div class="post-list__group">
-        <CategoryBadge slug={slug} href={`/${slug}`} />
-        <ul>
-          {posts.map((p) => (
-            <li>
-              <a href={`/posts/${p.slug}`}>{p.data.title}</a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ))}
+    <ul class="post-list__items">
+      {allPosts.map((p) => (
+        <li class="post-list__item">
+          <a class="post-list__link" href={`/posts/${p.slug}`}>{p.data.title}</a>
+          <div class="post-list__tags">
+            {p.data.categories.map((slug) => (
+              <CategoryBadge slug={slug} href={`/${slug}`} />
+            ))}
+          </div>
+        </li>
+      ))}
+    </ul>
   </section>
   </Fragment>
   )}
@@ -246,27 +241,30 @@ const grouped = usedSlugs.map((slug) => ({
   .post-list__title {
     margin: 0 0 1.25rem;
   }
-  .post-list__group {
-    display: grid;
-    grid-template-columns: 9rem 1fr;
-    gap: 1rem;
-    padding: 0.9rem 0;
-    border-top: var(--border-w) solid var(--border);
-    align-items: start;
-  }
-  .post-list__group ul {
+  .post-list__items {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
   }
-  @media (max-width: 34rem) {
-    .post-list__group {
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-    }
+  .post-list__item {
+    padding: 0.75rem 0;
+    border-top: var(--border-w) solid var(--border);
+  }
+  .post-list__link {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .post-list__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .post-list__tags :global(.badge) {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
   }
 </style>
 

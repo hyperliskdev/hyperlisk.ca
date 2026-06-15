@@ -1,7 +1,7 @@
 ---
 title: "Building something weird with AI for AI systems"
 description: "An overview of a new project I've gotten to a point of talking about."
-categories: [ai, identity, open-source, security, governance, enterprise, saas]
+categories: [ai, identity, governance]
 pubDate: 2026-06-15
 tags: ["ucip", "github@hyperliskdev"]
 ---
